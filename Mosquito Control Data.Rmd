@@ -1,0 +1,106 @@
+---
+title: "Mosquito Control 2019"
+author: "Marissa Fahlberg"
+date: "11/5/2019"
+output: html_document
+---
+
+library(dplyr)
+library(tidyr)
+library(naniar)
+library(janitor)
+
+#Import data
+mosquito<-read.csv("Crystal Historical Mosquito Spraying.csv",header=TRUE)
+
+#Remove empty rows
+mosquito<-mosquito %>% remove_empty("rows")
+
+#Filter columns that have at least two years worth of data
+subset<-mosquito %>% filter(X2017 == 0 & X2018 == 1 | X2017 == 0 & X2018 ==0 | X2017 == 1 & X2018 == 1 | X2017 == 0 & X2019 == 1 | X2017 == 0 & X2019 ==0 | X2017 == 1 & X2019 == 1 | X2019 == 0 & X2018 == 1 | X2019 == 0 & X2018 ==0 | X2019 == 1 & X2018 == 1)
+subset
+
+#Filter columns with three years worth of data and select two most recent data points
+subset2<-subset %>% filter(X2017 == 0 | X2017 == 1) %>% filter(X2018 == 0 | X2018 == 1) %>% filter(X2019 == 0 | X2019 == 1)
+subset3<-select(subset2,-c(X2017))
+subset3
+
+#Select rows with missing values in 2017 and values in 2018 and 2019
+subset8<-subset %>% filter(is.na(X2017))
+subset9<-select(subset8,-c(X2017))
+subset9
+
+#Select rows with missing values in 2018 and values in 2017 and 2019
+subset10<-subset %>% filter(is.na(X2018))
+subset11<-select(subset10,-c(X2018))
+subset11
+
+#Select rows with missing values in 2019 and values in 2017 and 2018
+subset12<-subset %>% filter(is.na(X2019))
+subset13<-select(subset12,-c(X2019))
+subset13
+
+#Rename columns from years to Before and After
+renamed1<-rename(subset3, Before = X2018)
+renamed1<-rename(renamed1, After = X2019)
+renamed2<-rename(subset9, Before = X2018)
+renamed2<-rename(renamed2, After = X2019)
+renamed3<-rename(subset11, Before = X2017)
+renamed3<-rename(renamed3, After = X2019)
+renamed4<-rename(subset13, Before = X2017)
+renamed4<-rename(renamed4, After = X2018)
+
+#Combine all subsets
+historyofbreeding<-bind_rows(renamed1,renamed2,renamed3,renamed4)
+historyofbreeding
+nrow(historyofbreeding)
+
+#Select rows where there was breeding before treatment
+breedinginpast<-historyofbreeding %>% filter(Before == 1)
+breedinginpast
+
+#Select rows where there was not breeding before treatment
+notbreedinginpast<-historyofbreeding %>% filter(Before == 0)
+notbreedinginpast
+
+#Select rows where there was not breeding before treatment and there was breeding after treatment
+past0present1<-historyofbreeding %>% filter(Before == 0 & After == 1)
+past0present1
+nrow(past0present1)
+
+#Select rows where there was not breeding before treatment and there was not breeding after treatment
+past0present0<-historyofbreeding %>% filter(Before == 0 & After == 0)
+past0present0
+nrow(past0present0)
+
+#Select rows where there was breeding before treatment and there was breeding after treatment
+past1present1<-historyofbreeding %>% filter(Before == 1 & After == 1)
+past1present1
+nrow(past1present1)
+
+#Select rows where there was  breeding before treatment and there was not breeding after treatment
+past1present0<-historyofbreeding %>% filter(Before == 1 & After == 0)
+past1present0
+nrow(past1present0)
+
+#Subset rows with no breeding history (only one value and two NA)
+nobreedinghistory1<-mosquito[is.na(mosquito$X2017) & is.na(mosquito$X2018),]
+nobreedinghistory2<-mosquito[is.na(mosquito$X2017) & is.na(mosquito$X2019),]
+nobreedinghistory3<-mosquito[is.na(mosquito$X2018) & is.na(mosquito$X2019),]
+nobreedinghistory<-bind_rows(nobreedinghistory1,nobreedinghistory2,nobreedinghistory3)
+nobreedinghistory2019<-select(nobreedinghistory1,-c(X2017,X2018))
+
+#Calculate percent breeding in 2019
+breeding2019<-nrow(nobreedinghistory2019 %>% filter(X2019 == 1))
+nobreeding2019<-nrow(nobreedinghistory2019 %>% filter(X2019 == 0))
+percentbreeding2019<-breeding2019/nobreeding2019*100
+percentbreeding2019
+
+#Calculate percent breeding after treatment
+aftertreatmentbreeding<- nrow(historyofbreeding %>% filter(After == 1))
+aftertreatmentnobreeding<- nrow(historyofbreeding %>% filter(After == 0))
+percentbreedingaftertreatment<-aftertreatmentbreeding/aftertreatmentnobreeding*100
+percentbreedingaftertreatment
+
+#Calculate percent breeding in the past and not breeding at present
+nrow(breedinginpast %>% filter(After == 0))/nrow(breedinginpast)*100
