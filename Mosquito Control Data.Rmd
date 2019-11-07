@@ -16,6 +16,10 @@ mosquito<-read.csv("Crystal Historical Mosquito Spraying.csv",header=TRUE)
 #Remove empty rows
 mosquito<-mosquito %>% remove_empty("rows")
 
+OR
+#Select specific rows if remove_empty does not work
+mosquito<-slice(mosquito, 1:2420)
+
 #Filter columns that have at least two years worth of data
 subset<-mosquito %>% filter(X2017 == 0 & X2018 == 1 | X2017 == 0 & X2018 ==0 | X2017 == 1 & X2018 == 1 | X2017 == 0 & X2019 == 1 | X2017 == 0 & X2019 ==0 | X2017 == 1 & X2019 == 1 | X2019 == 0 & X2018 == 1 | X2019 == 0 & X2018 ==0 | X2019 == 1 & X2018 == 1)
 subset
@@ -104,3 +108,10 @@ percentbreedingaftertreatment
 
 #Calculate percent breeding in the past and not breeding at present
 nrow(breedinginpast %>% filter(After == 0))/nrow(breedinginpast)*100
+
+#Chi-square test of categorical variables
+historystatstreatment <- matrix(c(365,1050,42,179),ncol=2,byrow=TRUE)
+colnames(historystatstreatment) <- c("Breeding","No Breeding")
+rownames(historystatstreatment) <- c("No History","History")
+historystatstreatment
+chisq.test(historystatstreatment)
