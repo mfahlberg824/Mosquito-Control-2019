@@ -14,11 +14,7 @@ library(janitor)
 mosquito<-read.csv("Crystal Historical Mosquito Spraying.csv",header=TRUE)
 
 #Remove empty rows
-mosquito<-mosquito %>% remove_empty("rows")
-
-OR
-#Select specific rows if remove_empty does not work
-mosquito<-slice(mosquito, 1:2420)
+mosquito<-mosquito[!with(mosquito,is.na(X2017) & is.na(X2018) & is.na(X2019)),]
 
 #Filter columns that have at least two years worth of data
 subset<-mosquito %>% filter(X2017 == 0 & X2018 == 1 | X2017 == 0 & X2018 ==0 | X2017 == 1 & X2018 == 1 | X2017 == 0 & X2019 == 1 | X2017 == 0 & X2019 ==0 | X2017 == 1 & X2019 == 1 | X2019 == 0 & X2018 == 1 | X2019 == 0 & X2018 ==0 | X2019 == 1 & X2018 == 1)
